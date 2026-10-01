@@ -2,16 +2,21 @@ import { z } from 'zod';
 
 export const taskInputSchema = z
   .object({
-    title: z.string().trim().min(1, 'Title is required').max(120),
-    description: z.string().trim().max(2000).nullable(),
+    title: z.string().trim().min(1, 'Title is required').max(120, 'Title is too long'),
+    description: z
+      .string()
+      .trim()
+      .max(2000, 'Description is too long')
+      .nullable()
+      .transform((v) => v || null),
     startAt: z.date().nullable(),
     endAt: z.date().nullable(),
     allDay: z.boolean(),
     estimateMinutes: z
       .number()
       .int()
-      .positive()
-      .max(24 * 60)
+      .positive('Must be greater than 0')
+      .max(24 * 60, 'Must be under 24 hours')
       .nullable(),
     recurrenceRule: z.string().nullable(),
   })
@@ -20,4 +25,5 @@ export const taskInputSchema = z
     path: ['endAt'],
   });
 
-export type TaskInput = z.infer<typeof taskInputSchema>;
+export type TaskFormInput = z.input<typeof taskInputSchema>;
+export type TaskInput = z.output<typeof taskInputSchema>;

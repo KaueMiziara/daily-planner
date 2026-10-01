@@ -3,6 +3,7 @@ import { randomUUID } from 'expo-crypto';
 import { db } from '@/lib/db';
 import { tasks, type Task } from './db/schema';
 import { taskInputSchema, type TaskInput } from './schemas';
+import { normalizeAllDay } from './schedule';
 
 const notDeleted = isNull(tasks.deletedAt);
 
@@ -25,7 +26,7 @@ export const taskRepository = {
   },
 
   async create(input: TaskInput): Promise<Task> {
-    const data = taskInputSchema.parse(input);
+    const data = normalizeAllDay(taskInputSchema.parse(input));
     const now = new Date();
     const [created] = await db
       .insert(tasks)
@@ -35,7 +36,7 @@ export const taskRepository = {
   },
 
   async update(id: string, input: TaskInput): Promise<Task | null> {
-    const data = taskInputSchema.parse(input);
+    const data = normalizeAllDay(taskInputSchema.parse(input));
     const [updated] = await db
       .update(tasks)
       .set({ ...data, updatedAt: new Date() })

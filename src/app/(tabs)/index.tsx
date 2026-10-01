@@ -1,48 +1,58 @@
-import { Pressable, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { FlatList, Pressable } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
 import { Screen } from '@/components/ui/Screen';
-import { taskRepository, useTasks } from '@/features/tasks';
+import { completionRepository, SINGLE_OCCURRENCE, TaskItem, useTodayTasks } from '@/features/tasks';
 import { useTheme } from '@/theme/useTheme';
 
 export default function TodayScreen() {
   const { colors, spacing, radius } = useTheme();
-  const tasks = useTasks();
-
-  const addTestTask = () =>
-    taskRepository.create({
-      title: `Test task ${tasks.length + 1}`,
-      description: null,
-      startAt: new Date(),
-      endAt: new Date(Date.now() + 60 * 60 * 1000),
-      allDay: false,
-      estimateMinutes: 30,
-      recurrenceRule: null,
-    });
+  const tasks = useTodayTasks();
 
   return (
     <Screen>
       <AppText variant="title">Today</AppText>
+      <AppText muted style={{ marginBottom: spacing.md }}>
+        {new Date().toLocaleDateString(undefined, {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+        })}
+      </AppText>
+
+      <FlatList
+        data={tasks}
+        keyExtractor={(t) => t.id}
+        contentContainerStyle={{ paddingBottom: 88 }}
+        ListEmptyComponent={<AppText muted>Nothing planned for today.</AppText>}
+        renderItem={({ item }) => (
+          <TaskItem
+            task={item}
+            onToggle={() => completionRepository.setDone(item.id, SINGLE_OCCURRENCE, !item.done)}
+            onPress={() => router.push({ pathname: '/task/[id]', params: { id: item.id } })}
+          />
+        )}
+      />
+
       <Pressable
-        onPress={addTestTask}
+        onPress={() => router.push('/task/new')}
+        accessibilityLabel="Add task"
         style={{
-          marginVertical: spacing.md,
-          padding: spacing.md,
-          borderRadius: radius.md,
+          position: 'absolute',
+          right: spacing.md,
+          bottom: spacing.md,
+          width: 56,
+          height: 56,
+          borderRadius: radius.full,
           backgroundColor: colors.primary,
+          alignItems: 'center',
+          justifyContent: 'center',
+          elevation: 4,
         }}
       >
-        <AppText style={{ color: colors.onPrimary }}>Add test task</AppText>
+        <Ionicons name="add" size={28} color={colors.onPrimary} />
       </Pressable>
-      {tasks.map((t) => (
-        <Pressable key={t.id} onLongPress={() => taskRepository.softDelete(t.id)}>
-          <View style={{ paddingVertical: spacing.sm }}>
-            <AppText>{t.title}</AppText>
-            <AppText variant="caption" muted>
-              {t.startAt?.toLocaleTimeString()} (long-press to delete)
-            </AppText>
-          </View>
-        </Pressable>
-      ))}
     </Screen>
   );
 }

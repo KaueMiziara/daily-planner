@@ -43,7 +43,11 @@ export default function RootLayout() {
           headerShown: false,
           contentStyle: { backgroundColor: colors.background },
         }}
-      />
+      >
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="task/new" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="task/[id]" options={{ presentation: 'modal' }} />
+      </Stack>
     </>
   );
 }
