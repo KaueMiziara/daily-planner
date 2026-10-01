@@ -4,6 +4,7 @@ import { AppText } from '@/components/ui/AppText';
 import { useTheme } from '@/theme/useTheme';
 import { formatSchedule } from '../format';
 import type { TaskWithStatus } from '../hooks';
+import { formatDateTime } from '@/utils/format';
 
 type Props = { task: TaskWithStatus; onToggle: () => void; onPress: () => void };
 
@@ -21,7 +22,7 @@ export function TaskItem({ task, onToggle, onPress }: Props) {
         marginBottom: spacing.sm,
         borderRadius: radius.md,
         borderWidth: 1,
-        borderColor: colors.border,
+        borderColor: task.overdue ? colors.danger : colors.border,
         backgroundColor: colors.surface,
         opacity: task.done ? 0.6 : 1,
       }}
@@ -42,8 +43,13 @@ export function TaskItem({ task, onToggle, onPress }: Props) {
         <AppText style={task.done ? { textDecorationLine: 'line-through' } : undefined}>
           {task.title}
         </AppText>
-        <AppText variant="caption" muted>
-          {formatSchedule(task)}
+        <AppText
+          variant="caption"
+          style={{ color: task.overdue ? colors.danger : colors.textMuted }}
+        >
+          {task.overdue && task.endAt
+            ? `Overdue · due ${formatDateTime(task.endAt, task.allDay)}`
+            : formatSchedule(task)}
         </AppText>
       </View>
     </Pressable>

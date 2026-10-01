@@ -1,11 +1,5 @@
-import { AppText } from '@/components/ui/AppText';
-import { Screen } from '@/components/ui/Screen';
+import { CalendarScreen } from '@/features/calendar';
 
-export default function TodayScreen() {
-  return (
-    <Screen>
-      <AppText variant="title">Calendar</AppText>
-      <AppText muted>Your tasks will show up here.</AppText>
-    </Screen>
-  );
+export default function CalendarRoute() {
+  return <CalendarScreen />;
 }

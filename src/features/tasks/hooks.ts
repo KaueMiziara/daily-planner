@@ -1,27 +1,44 @@
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { useEffect, useMemo, useState } from 'react';
+import { useNow } from '@/hooks/useNow';
 import { completionRepository, SINGLE_OCCURRENCE } from './completions';
 import type { Task } from './db/schema';
 import { taskRepository } from './repository';
-import { selectToday } from './schedule';
+import { isOverdue, selectToday } from './schedule';
 
-export type TaskWithStatus = Task & { done: boolean };
+export type TaskWithStatus = Task & { done: boolean; completedAt: Date | null; overdue: boolean };
 
-export function useTasksWithStatus(): TaskWithStatus[] {
+function useStatusTasks(now: Date): TaskWithStatus[] {
   const { data: tasks } = useLiveQuery(taskRepository.activeQuery());
   const { data: completions } = useLiveQuery(completionRepository.allQuery());
 
   return useMemo(() => {
-    const doneIds = new Set(
-      completions.filter((c) => c.occurrenceDate === SINGLE_OCCURRENCE).map((c) => c.taskId),
+    const completedAt = new Map(
+      completions
+        .filter((c) => c.occurrenceDate === SINGLE_OCCURRENCE)
+        .map((c) => [c.taskId, c.completedAt] as const),
     );
-    return tasks.map((t) => ({ ...t, done: doneIds.has(t.id) }));
-  }, [tasks, completions]);
+    return tasks.map((t) => {
+      const done = completedAt.has(t.id);
+      return {
+        ...t,
+        done,
+        completedAt: completedAt.get(t.id) ?? null,
+        overdue: isOverdue({ ...t, done }, now),
+      };
+    });
+  }, [tasks, completions, now]);
 }
 
-export function useTodayTasks(): TaskWithStatus[] {
-  const all = useTasksWithStatus();
-  return useMemo(() => selectToday(all, new Date()), [all]);
+export function useTasksWithStatus(): TaskWithStatus[] {
+  return useStatusTasks(useNow());
+}
+
+export function useTodaySections() {
+  const now = useNow();
+  const all = useStatusTasks(now);
+  const sections = useMemo(() => selectToday(all, now), [all, now]);
+  return { ...sections, now };
 }
 
 export function useTask(id: string) {

@@ -13,6 +13,7 @@ import { taskInputSchema, type TaskFormInput, type TaskInput } from '../schemas'
 type Props = {
   heading: string;
   initial?: Task;
+  defaults?: Partial<TaskFormInput>;
   onSubmit: (input: TaskInput) => Promise<void>;
   onDelete?: () => Promise<void>;
   onClose: () => void;
@@ -40,7 +41,7 @@ function toFormValues(task: Task): TaskFormInput {
   };
 }
 
-export function TaskForm({ heading, initial, onSubmit, onDelete, onClose }: Props) {
+export function TaskForm({ heading, initial, defaults, onSubmit, onDelete, onClose }: Props) {
   const { colors, spacing } = useTheme();
   const {
     control,
@@ -48,7 +49,7 @@ export function TaskForm({ heading, initial, onSubmit, onDelete, onClose }: Prop
     formState: { errors, isSubmitting },
   } = useForm<TaskFormInput, unknown, TaskInput>({
     resolver: zodResolver(taskInputSchema),
-    defaultValues: initial ? toFormValues(initial) : EMPTY,
+    defaultValues: initial ? toFormValues(initial) : { ...EMPTY, ...defaults },
   });
 
   const allDay = useWatch({ control, name: 'allDay' });

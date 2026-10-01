@@ -7,13 +7,18 @@ import { useTheme } from '@/theme/useTheme';
 import { useTask } from '../hooks';
 import { taskRepository } from '../repository';
 import { TaskForm } from './TaskForm';
+import { isValid, parse } from 'date-fns';
 
 const close = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
-function CreateTask() {
+function CreateTask({ date }: { date?: string }) {
+  const day = date ? parse(date, 'yyyy-MM-dd', new Date(0)) : null;
+  const defaults = day && isValid(day) ? { allDay: true, startAt: day } : undefined;
+
   return (
     <TaskForm
       heading="New task"
+      defaults={defaults}
       onClose={close}
       onSubmit={async (input) => {
         await taskRepository.create(input);
@@ -61,6 +66,6 @@ function EditTask({ taskId }: { taskId: string }) {
   );
 }
 
-export function TaskFormScreen({ taskId }: { taskId?: string }) {
-  return taskId ? <EditTask taskId={taskId} /> : <CreateTask />;
+export function TaskFormScreen({ taskId, date }: { taskId?: string; date?: string }) {
+  return taskId ? <EditTask taskId={taskId} /> : <CreateTask date={date} />;
 }
