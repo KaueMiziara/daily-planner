@@ -10,29 +10,44 @@ import { selectToday } from './schedule';
 
 const OVERDUE_LOOKBACK_DAYS = 7;
 
-function useOccurrences(fromMs: number, toMs: number, now: Date): TaskOccurrence[] {
-  const { data: tasks } = useLiveQuery(taskRepository.activeQuery());
-  const { data: completions } = useLiveQuery(completionRepository.allQuery());
+function useOccurrenceState(fromMs: number, toMs: number, now: Date) {
+  const tasks = useLiveQuery(taskRepository.activeQuery());
+  const completions = useLiveQuery(completionRepository.allQuery());
 
-  return useMemo(
-    () => buildOccurrences(tasks, completions, { from: new Date(fromMs), to: new Date(toMs) }, now),
-    [tasks, completions, fromMs, toMs, now],
+  const occurrences = useMemo(
+    () =>
+      buildOccurrences(
+        tasks.data,
+        completions.data,
+        { from: new Date(fromMs), to: new Date(toMs) },
+        now,
+      ),
+    [tasks.data, completions.data, fromMs, toMs, now],
   );
+
+  const loaded = tasks.updatedAt !== undefined && completions.updatedAt !== undefined;
+  return { occurrences, loaded };
 }
 
 export function useOccurrencesBetween(from: Date, to: Date): TaskOccurrence[] {
   const now = useNow();
-  return useOccurrences(from.getTime(), to.getTime(), now);
+  return useOccurrenceState(from.getTime(), to.getTime(), now).occurrences;
+}
+
+export function useLoadedOccurrences(from: Date, to: Date): TaskOccurrence[] | null {
+  const now = useNow();
+  const { occurrences, loaded } = useOccurrenceState(from.getTime(), to.getTime(), now);
+  return loaded ? occurrences : null;
 }
 
 export function useTodaySections() {
   const now = useNow();
-  const all = useOccurrences(
+  const { occurrences } = useOccurrenceState(
     startOfDay(subDays(now, OVERDUE_LOOKBACK_DAYS)).getTime(),
     endOfDay(now).getTime(),
     now,
   );
-  const sections = useMemo(() => selectToday(all, now), [all, now]);
+  const sections = useMemo(() => selectToday(occurrences, now), [occurrences, now]);
   return { ...sections, now };
 }
 

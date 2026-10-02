@@ -4,6 +4,7 @@ import { Screen } from '@/components/ui/Screen';
 import { useThemeStore } from '@/theme/store';
 import type { ThemeMode } from '@/theme/types';
 import { useTheme } from '@/theme/useTheme';
+import { ReminderSettings } from '@/features/notifications';
 
 const MODES: ThemeMode[] = ['system', 'light', 'dark'];
 
@@ -39,6 +40,7 @@ export default function SettingsScreen() {
           );
         })}
       </View>
+      <ReminderSettings />
     </Screen>
   );
 }

@@ -6,6 +6,7 @@ import { db } from '@/lib/db';
 import migrations from '../../drizzle/migrations';
 import { ActivityIndicator, View } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
+import { NotificationEffects } from '@/features/notifications';
 
 export default function RootLayout() {
   const { scheme, colors } = useTheme();
@@ -38,6 +39,7 @@ export default function RootLayout() {
   return (
     <>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+      <NotificationEffects />
       <Stack
         screenOptions={{
           headerShown: false,
