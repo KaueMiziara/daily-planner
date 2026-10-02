@@ -23,6 +23,10 @@ export const taskInputSchema = z
   .refine((t) => !t.startAt || !t.endAt || t.endAt >= t.startAt, {
     message: 'The deadline must be after the start',
     path: ['endAt'],
+  })
+  .refine((t) => !t.recurrenceRule || Boolean(t.startAt ?? t.endAt), {
+    message: 'Set a start or due date to repeat this task',
+    path: ['recurrenceRule'],
   });
 
 export type TaskFormInput = z.input<typeof taskInputSchema>;

@@ -5,10 +5,11 @@ import { AppText } from '@/components/ui/AppText';
 import { Screen } from '@/components/ui/Screen';
 import { useTheme } from '@/theme/useTheme';
 import { toggleTaskDone } from '../completions';
-import { useTodaySections, type TaskWithStatus } from '../hooks';
+import { useTodaySections } from '../hooks';
+import type { TaskOccurrence } from '../occurrences';
 import { TaskItem } from './TaskItem';
 
-type Section = { key: 'overdue' | 'today'; title: string; data: TaskWithStatus[] };
+type Section = { key: 'overdue' | 'today'; title: string; data: TaskOccurrence[] };
 
 export function TodayScreen() {
   const { colors, spacing, radius } = useTheme();
@@ -28,7 +29,7 @@ export function TodayScreen() {
 
       <SectionList
         sections={sections}
-        keyExtractor={(t) => t.id}
+        keyExtractor={(t) => t.key}
         stickySectionHeadersEnabled={false}
         contentContainerStyle={{ paddingBottom: 88 }}
         ListEmptyComponent={<AppText muted>Nothing planned for today.</AppText>}

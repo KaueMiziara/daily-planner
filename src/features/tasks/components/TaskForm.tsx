@@ -9,6 +9,7 @@ import { TextField } from '@/components/ui/TextField';
 import { useTheme } from '@/theme/useTheme';
 import type { Task } from '../db/schema';
 import { taskInputSchema, type TaskFormInput, type TaskInput } from '../schemas';
+import { RecurrenceField } from './RecurrenceField';
 
 type Props = {
   heading: string;
@@ -53,6 +54,8 @@ export function TaskForm({ heading, initial, defaults, onSubmit, onDelete, onClo
   });
 
   const allDay = useWatch({ control, name: 'allDay' });
+  const startAt = useWatch({ control, name: 'startAt' });
+  const endAt = useWatch({ control, name: 'endAt' });
 
   const confirmDelete = () =>
     Alert.alert('Delete task?', 'This will remove the task.', [
@@ -156,6 +159,19 @@ export function TaskForm({ heading, initial, defaults, onSubmit, onDelete, onClo
               onChange={field.onChange}
               allDay={allDay}
               error={errors.endAt?.message}
+            />
+          )}
+        />
+
+        <Controller
+          control={control}
+          name="recurrenceRule"
+          render={({ field }) => (
+            <RecurrenceField
+              value={field.value}
+              onChange={field.onChange}
+              anchor={startAt ?? endAt}
+              error={errors.recurrenceRule?.message}
             />
           )}
         />

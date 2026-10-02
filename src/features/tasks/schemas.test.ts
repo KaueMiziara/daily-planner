@@ -29,4 +29,19 @@ describe('taskInputSchema', () => {
   it('turns a blank description into null', () => {
     expect(taskInputSchema.parse({ ...valid, description: '  ' }).description).toBeNull();
   });
+
+  it('requires a date for recurring tasks and reports it on recurrenceRule', () => {
+    const result = taskInputSchema.safeParse({ ...valid, recurrenceRule: 'FREQ=DAILY' });
+    expect(result.success).toBe(false);
+    if (!result.success) expect(result.error.issues[0].path).toEqual(['recurrenceRule']);
+  });
+
+  it('accepts a recurring task that has a start', () => {
+    const result = taskInputSchema.safeParse({
+      ...valid,
+      startAt: new Date(2026, 9, 5, 9),
+      recurrenceRule: 'FREQ=DAILY',
+    });
+    expect(result.success).toBe(true);
+  });
 });

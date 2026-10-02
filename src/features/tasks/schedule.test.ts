@@ -3,6 +3,7 @@ import {
   isOverdue,
   isScheduledOn,
   normalizeAllDay,
+  overlapsRange,
   selectForDay,
   selectToday,
   summarizeDays,
@@ -29,25 +30,49 @@ describe('normalizeAllDay', () => {
   });
 });
 
+describe('overlapsRange', () => {
+  const from = at(5, 10);
+  const to = at(5, 11);
+
+  it('treats the range ends as inclusive', () => {
+    expect(overlapsRange({ startAt: at(5, 9), endAt: at(5, 10) }, from, to)).toBe(true);
+    expect(overlapsRange({ startAt: at(5, 11), endAt: at(5, 12) }, from, to)).toBe(true);
+  });
+
+  it('rejects tasks that end just before or start just after the range', () => {
+    expect(overlapsRange({ startAt: at(5, 9), endAt: at(5, 9, 59) }, from, to)).toBe(false);
+    expect(overlapsRange({ startAt: at(5, 11, 1), endAt: at(5, 12) }, from, to)).toBe(false);
+  });
+
+  it('matches a task that fully contains the range, and a point task inside it', () => {
+    expect(overlapsRange({ startAt: at(5, 8), endAt: at(5, 20) }, from, to)).toBe(true);
+    expect(overlapsRange({ startAt: at(5, 10, 30), endAt: null }, from, to)).toBe(true);
+  });
+
+  it('never matches an undated task', () => {
+    expect(overlapsRange({ startAt: null, endAt: null }, from, to)).toBe(false);
+  });
+});
+
 describe('isScheduledOn', () => {
   const day = at(5, 12);
 
   it('matches a task starting that day', () => {
-    expect(isScheduledOn({ allDay: false, startAt: at(5, 9), endAt: at(5, 10) }, day)).toBe(true);
+    expect(isScheduledOn({ startAt: at(5, 9), endAt: at(5, 10) }, day)).toBe(true);
   });
 
   it('matches the middle day of a multi-day task', () => {
-    expect(isScheduledOn({ allDay: false, startAt: at(3, 9), endAt: at(7, 18) }, day)).toBe(true);
+    expect(isScheduledOn({ startAt: at(3, 9), endAt: at(7, 18) }, day)).toBe(true);
   });
 
   it('uses the deadline day for a deadline-only task', () => {
-    expect(isScheduledOn({ allDay: false, startAt: null, endAt: at(5, 18) }, day)).toBe(true);
-    expect(isScheduledOn({ allDay: false, startAt: null, endAt: at(6, 18) }, day)).toBe(false);
+    expect(isScheduledOn({ startAt: null, endAt: at(5, 18) }, day)).toBe(true);
+    expect(isScheduledOn({ startAt: null, endAt: at(6, 18) }, day)).toBe(false);
   });
 
   it('does not match other days or undated tasks', () => {
-    expect(isScheduledOn({ allDay: false, startAt: at(4, 9), endAt: at(4, 10) }, day)).toBe(false);
-    expect(isScheduledOn({ allDay: false, startAt: null, endAt: null }, day)).toBe(false);
+    expect(isScheduledOn({ startAt: at(4, 9), endAt: at(4, 10) }, day)).toBe(false);
+    expect(isScheduledOn({ startAt: null, endAt: null }, day)).toBe(false);
   });
 });
 
@@ -135,6 +160,15 @@ describe('selectToday', () => {
       now,
     );
     expect(ids(today)).toEqual(['pending', 'done-today']);
+  });
+
+  it('shows only the latest missed occurrence of a recurring task', () => {
+    const missed = (day: number) => ({
+      ...task('daily', at(day, 9), { endAt: at(day, 10) }),
+      recurring: true,
+    });
+    const { overdue } = selectToday([missed(2), missed(3), missed(4)], now);
+    expect(overdue.map((t) => t.startAt)).toEqual([at(4, 9)]);
   });
 });
 

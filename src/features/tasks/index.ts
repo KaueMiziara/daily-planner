@@ -1,8 +1,9 @@
 export { TaskFormScreen } from './components/TaskFormScreen';
 export { TaskItem } from './components/TaskItem';
 export { TodayScreen } from './components/TodayScreen';
-export { completionRepository, SINGLE_OCCURRENCE, toggleTaskDone } from './completions';
-export { useTask, useTasksWithStatus, useTodaySections, type TaskWithStatus } from './hooks';
+export { completionRepository, toggleTaskDone } from './completions';
+export { useOccurrencesBetween, useTask, useTodaySections } from './hooks';
+export type { TaskOccurrence } from './occurrences';
 export { taskRepository } from './repository';
 export { selectForDay, summarizeDays, toDayKey, type DaySummary } from './schedule';
 export { taskInputSchema, type TaskFormInput, type TaskInput } from './schemas';

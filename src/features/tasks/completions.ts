@@ -2,12 +2,6 @@ import { and, eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { taskCompletions } from './db/schema';
 
-export const SINGLE_OCCURRENCE = 'single';
-
-export function toggleTaskDone(task: { id: string; done: boolean }): Promise<void> {
-  return completionRepository.setDone(task.id, SINGLE_OCCURRENCE, !task.done);
-}
-
 export const completionRepository = {
   allQuery() {
     return db.select().from(taskCompletions);
@@ -31,3 +25,11 @@ export const completionRepository = {
     }
   },
 };
+
+export function toggleTaskDone(task: {
+  id: string;
+  occurrenceKey: string;
+  done: boolean;
+}): Promise<void> {
+  return completionRepository.setDone(task.id, task.occurrenceKey, !task.done);
+}

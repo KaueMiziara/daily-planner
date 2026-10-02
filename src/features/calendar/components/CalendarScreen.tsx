@@ -1,4 +1,4 @@
-import { isSameMonth, startOfMonth } from 'date-fns';
+import { endOfDay, isSameMonth, startOfMonth } from 'date-fns';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ScrollView, View } from 'react-native';
@@ -9,28 +9,29 @@ import {
   summarizeDays,
   toDayKey,
   toggleTaskDone,
-  useTasksWithStatus,
+  useOccurrencesBetween,
 } from '@/features/tasks';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { useNow } from '@/hooks/useNow';
 import { useTheme } from '@/theme/useTheme';
-import { getMonthGrid, WEEK_STARTS_ON } from '../monthGrid';
+import { WEEK_STARTS_ON } from '@/utils/week';
+import { getMonthGrid } from '../monthGrid';
 import { DayAgenda } from './DayAgenda';
 import { MonthGrid } from './MonthGrid';
 
 export function CalendarScreen() {
   const { spacing } = useTheme();
   const compact = useBreakpoint() === 'compact';
+
   const now = useNow();
-  const tasks = useTasksWithStatus();
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [selected, setSelected] = useState(() => new Date());
 
   const weeks = useMemo(() => getMonthGrid(month, WEEK_STARTS_ON), [month]);
+  const tasks = useOccurrencesBetween(weeks[0][0], endOfDay(weeks[5][6]));
   const summaries = useMemo(() => summarizeDays(tasks, weeks.flat()), [tasks, weeks]);
   const dayTasks = useMemo(() => selectForDay(tasks, selected), [tasks, selected]);
 
-  // Showing a month also selects a sensible day in it: today, or the 1st.
   const showMonth = (target: Date) => {
     setMonth(startOfMonth(target));
     setSelected(isSameMonth(target, now) ? now : startOfMonth(target));

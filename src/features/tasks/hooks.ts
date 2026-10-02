@@ -1,42 +1,37 @@
+import { endOfDay, startOfDay, subDays } from 'date-fns';
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { useEffect, useMemo, useState } from 'react';
 import { useNow } from '@/hooks/useNow';
-import { completionRepository, SINGLE_OCCURRENCE } from './completions';
+import { completionRepository } from './completions';
 import type { Task } from './db/schema';
+import { buildOccurrences, type TaskOccurrence } from './occurrences';
 import { taskRepository } from './repository';
-import { isOverdue, selectToday } from './schedule';
+import { selectToday } from './schedule';
 
-export type TaskWithStatus = Task & { done: boolean; completedAt: Date | null; overdue: boolean };
+const OVERDUE_LOOKBACK_DAYS = 7;
 
-function useStatusTasks(now: Date): TaskWithStatus[] {
+function useOccurrences(fromMs: number, toMs: number, now: Date): TaskOccurrence[] {
   const { data: tasks } = useLiveQuery(taskRepository.activeQuery());
   const { data: completions } = useLiveQuery(completionRepository.allQuery());
 
-  return useMemo(() => {
-    const completedAt = new Map(
-      completions
-        .filter((c) => c.occurrenceDate === SINGLE_OCCURRENCE)
-        .map((c) => [c.taskId, c.completedAt] as const),
-    );
-    return tasks.map((t) => {
-      const done = completedAt.has(t.id);
-      return {
-        ...t,
-        done,
-        completedAt: completedAt.get(t.id) ?? null,
-        overdue: isOverdue({ ...t, done }, now),
-      };
-    });
-  }, [tasks, completions, now]);
+  return useMemo(
+    () => buildOccurrences(tasks, completions, { from: new Date(fromMs), to: new Date(toMs) }, now),
+    [tasks, completions, fromMs, toMs, now],
+  );
 }
 
-export function useTasksWithStatus(): TaskWithStatus[] {
-  return useStatusTasks(useNow());
+export function useOccurrencesBetween(from: Date, to: Date): TaskOccurrence[] {
+  const now = useNow();
+  return useOccurrences(from.getTime(), to.getTime(), now);
 }
 
 export function useTodaySections() {
   const now = useNow();
-  const all = useStatusTasks(now);
+  const all = useOccurrences(
+    startOfDay(subDays(now, OVERDUE_LOOKBACK_DAYS)).getTime(),
+    endOfDay(now).getTime(),
+    now,
+  );
   const sections = useMemo(() => selectToday(all, now), [all, now]);
   return { ...sections, now };
 }

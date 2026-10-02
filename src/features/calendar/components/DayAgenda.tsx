@@ -1,14 +1,15 @@
 import { View } from 'react-native';
 import { AppText } from '@/components/ui/AppText';
 import { Button } from '@/components/ui/Button';
-import { TaskItem, type TaskWithStatus } from '@/features/tasks';
+import { TaskItem } from '@/features/tasks';
+import type { TaskOccurrence } from '@/features/tasks';
 import { useTheme } from '@/theme/useTheme';
 
 type Props = {
   day: Date;
-  tasks: TaskWithStatus[];
-  onToggle: (task: TaskWithStatus) => void;
-  onOpen: (task: TaskWithStatus) => void;
+  tasks: TaskOccurrence[];
+  onToggle: (task: TaskOccurrence) => void;
+  onOpen: (task: TaskOccurrence) => void;
   onAdd: () => void;
 };
 
@@ -36,7 +37,7 @@ export function DayAgenda({ day, tasks, onToggle, onOpen, onAdd }: Props) {
       ) : (
         tasks.map((task) => (
           <TaskItem
-            key={task.id}
+            key={task.key}
             task={task}
             onToggle={() => onToggle(task)}
             onPress={() => onOpen(task)}
