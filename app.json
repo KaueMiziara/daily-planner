@@ -1,16 +1,18 @@
 {
   "expo": {
-    "name": "daily-planner",
-    "slug": "daily-planner",
+    "name": "Hodie",
+    "slug": "hodie",
+    "scheme": "hodie",
     "version": "1.0.0",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
-    "scheme": "dailyplanner",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.kauemiziara.hodie"
     },
     "android": {
+      "package": "com.kauemiziara.hodie",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -18,8 +20,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "permissions": ["android.permission.SCHEDULE_EXACT_ALARM"],
-      "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.dailyplanner"
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "output": "static",

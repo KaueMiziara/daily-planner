@@ -1,56 +1,138 @@
-# Welcome to your Expo app 👋
+# Hodie Daily Planner
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A to-do and planning app for Android, built with React Native and Expo. It works offline, stores everything on the device, and needs no account.
 
-## Get started
+It was built for one real user whose phone's default notes app could not handle a routine. That app had no recurring tasks, did not mark tasks as overdue or notify at the deadline, and could not create a task for a later date. This app covers those three gaps and adds a calendar, reminders and themes.
 
-1. Install dependencies
+Status: the first version is complete and in use. Android is the main target, with the tablet layout in mind. iOS has not been tested.
 
-   ```bash
-   npm install
-   ```
+<!-- TODO: screenshots here: docs/screenshots/ -->
 
-2. Start the app
+## Features
 
-   ```bash
-   npx expo start
-   ```
+- Create, edit and delete tasks with a title, description, start and end date and time, and a time estimate.
+- All-day tasks and tasks without a date.
+- Recurring tasks: daily, weekly on chosen days, monthly, or every N days, weeks or months. Each occurrence is completed on its own.
+- Overdue state: a task past its deadline and not done is marked overdue automatically.
+- Today screen with an Overdue section and the tasks for the current day.
+- Month calendar with an agenda for the selected day. Dots show pending, done and overdue tasks.
+- Local notifications at the start time and the deadline. Tapping one opens the task.
+- Light and dark mode, plus theme packs. Each pack has its own light and dark colors and an optional background image.
+- Layout adapts to phones and tablets.
 
-In the output, you'll find options to open the app in a
+Not included yet: time tracking, backup and export, calendar sync, accounts. See [docs/ROADMAP.md](docs/ROADMAP.md).
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## How it works
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- **Local first.** SQLite is the source of truth. Screens read it through live queries, so lists update when the data changes.
+- **Recurrence.** A recurring task stores an RRULE string (RFC 5545), the format calendar apps use. Occurrences are calculated for the visible date range and are not stored.
+- **Completion.** Completion is stored per occurrence, using the task id and the day the occurrence starts.
+- **Overdue.** Calculated when read, from the end time and the completion state. It is never stored.
+- **Reminders.** A pure function plans the notifications for the next 7 days, up to 60 (iOS allows 64 pending). A scheduler interface passes the plan to the operating system, so changing how reminders are delivered affects one module.
+- **Themes.** A pack is data: colors and an optional background for light and dark. Screens read theme tokens only. Tests check text contrast for every pack.
+- **Structure.** Code is grouped by feature. Route files only compose screens. Each feature exposes a public API through its `index.ts`.
 
-## Get a fresh project
+## Tech stack
 
-When you're ready, run:
+| Area          | Library                                        |
+| ------------- | ---------------------------------------------- |
+| Framework     | Expo SDK 57, React Native, TypeScript (strict) |
+| Navigation    | Expo Router                                    |
+| Database      | expo-sqlite, Drizzle ORM                       |
+| State         | Zustand (settings), live queries (data)        |
+| Forms         | React Hook Form, Zod                           |
+| Dates         | date-fns, rrule                                |
+| Notifications | expo-notifications (local only)                |
+| Images        | expo-image                                     |
+| Tests         | Jest (jest-expo)                               |
 
-```bash
-npm run reset-project
+## Project structure
+
+```
+src/
+  app/              Routes. Thin files that compose screens.
+  features/
+    tasks/          Schema, repository, scheduling, recurrence, occurrences, task screens
+    calendar/       Month grid and day agenda
+    notifications/  Reminder planner, scheduler interface, sync, settings section
+    settings/       Appearance and reminder settings
+  components/ui/    Shared primitives (Screen, Button, TextField, DateTimeField)
+  lib/db/           Database client and combined schema
+  theme/            Tokens, theme packs, store, contrast helper
+  hooks/            useNow, useBreakpoint
+  utils/            Formatting and week settings
+drizzle/            Generated database migrations
+docs/               Project description, roadmap, QA checklist
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Getting started
 
-### Other setup steps
+Requirements:
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+- Node.js (current LTS)
+- JDK 17
+- Android Studio with the Android SDK (platform 36 and build tools 36.0.0)
+- An Android emulator, or a device with USB debugging enabled
 
-## Learn more
+Set `ANDROID_HOME` to the SDK location. If Gradle reports conflicting SDK paths, unset `ANDROID_SDK_ROOT`.
 
-To learn more about developing your project with Expo, look at the following resources:
+```
+npm install
+npx expo run:android
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+The first build takes several minutes and generates the `android/` folder. After that, start the development server and press `a`:
 
-## Join the community
+```
+npx expo start
+```
 
-Join our community of developers creating universal apps.
+The app needs a development build. Expo Go is not enough because the app declares native configuration (the notifications plugin and an alarm permission).
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+To build a release APK:
+
+```
+cd android
+./gradlew assembleRelease
+```
+
+The APK is written to `android/app/build/outputs/apk/release/`. Release signing for store publication is not configured.
+
+## Scripts
+
+```
+npm run typecheck    Type check
+npx expo lint        Lint
+npm test             Unit tests
+npm run format       Format with Prettier
+npx drizzle-kit generate    Create a migration after a schema change
+```
+
+## Tests
+
+Unit tests cover logic that is easy to get wrong:
+
+- Scheduling: all-day normalization, day matching, overdue rules, the Today and agenda selection
+- Recurrence: RRULE serialization and expansion for daily, weekly, interval and monthly rules
+- Occurrences: per-occurrence completion and overdue state
+- Reminders: planning rules, the 7 day window and limit, and the sync step (permission handling, repeated calls)
+- Validation: task input rules
+- Calendar: month grid generation
+- Themes: color format and WCAG contrast for every pack
+
+Screens are checked by hand with [docs/QA_CHECKLIST.md](docs/QA_CHECKLIST.md).
+
+## Theme packs
+
+To add a pack, create a file in `src/theme/packs`, export a `ThemePack` with a light and a dark variant, and add it to `src/theme/packs/index.ts`. Run `npm test` to check the contrast.
+
+A variant can include a background image. The image is drawn behind every screen and covered by a semi-transparent layer in the theme's background color, so text stays readable.
+
+Bundled packs use original colors only. Character artwork is not part of the repository. Packs that use it are loaded from a local folder that git ignores.
+
+## Documentation
+
+- [docs/PROJECT.md](docs/PROJECT.md): problem, scope, design decisions
+- [docs/ROADMAP.md](docs/ROADMAP.md): planned work, known limitations, open questions
+- [docs/QA_CHECKLIST.md](docs/QA_CHECKLIST.md): manual test checklist
+- [CLAUDE.md](CLAUDE.md): rules for AI coding assistants working in this repository
