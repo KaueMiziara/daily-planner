@@ -2,6 +2,7 @@ import { View, type ViewProps } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBreakpoint } from '@/hooks/useBreakpoint';
 import { useTheme } from '@/theme/useTheme';
+import { ThemeBackground } from './ThemeBackground';
 
 export function Screen({ children, style, ...rest }: ViewProps) {
   const { colors, spacing } = useTheme();
@@ -12,6 +13,7 @@ export function Screen({ children, style, ...rest }: ViewProps) {
       edges={['top', 'left', 'right']}
       style={{ flex: 1, backgroundColor: colors.background }}
     >
+      <ThemeBackground />
       <View
         style={[
           {

@@ -1,5 +1,3 @@
-import type { ImageSourcePropType } from 'react-native';
-
 export type ThemeColors = {
   background: string;
   surface: string;
@@ -13,9 +11,16 @@ export type ThemeColors = {
   warning: string;
 };
 
+export type BackgroundSource = number | { uri: string };
+
+export type ThemeBackground = {
+  image: BackgroundSource;
+  scrim?: number;
+};
+
 export type ThemeVariant = {
   colors: ThemeColors;
-  backgroundImage?: ImageSourcePropType;
+  background?: ThemeBackground;
 };
 
 export type ThemePack = {

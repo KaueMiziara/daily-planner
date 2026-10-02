@@ -14,7 +14,7 @@ export function useTheme() {
   return {
     scheme,
     colors: variant.colors,
-    backgroundImage: variant.backgroundImage,
+    background: variant.background,
     spacing,
     radius,
     typography,

@@ -1,7 +1,13 @@
 import Storage from 'expo-sqlite/kv-store';
 import { create } from 'zustand';
-import { createJSONStorage, persist } from 'zustand/middleware';
+import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware';
 import type { ThemeMode } from './types';
+
+const syncStorage: StateStorage = {
+  getItem: (name) => Storage.getItemSync(name),
+  setItem: (name, value) => Storage.setItemSync(name, value),
+  removeItem: (name) => Storage.removeItemSync(name),
+};
 
 type ThemeState = {
   mode: ThemeMode;
@@ -20,7 +26,7 @@ export const useThemeStore = create<ThemeState>()(
     }),
     {
       name: 'theme-settings',
-      storage: createJSONStorage(() => Storage),
+      storage: createJSONStorage(() => syncStorage),
       partialize: (s) => ({ mode: s.mode, packId: s.packId }),
     },
   ),
